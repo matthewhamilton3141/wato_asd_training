@@ -1,3 +1,12 @@
-# planner_node:
-#   ros__parameters:
-    
+planner_node:
+  ros__parameters:
+    map_topic: "/map"
+    goal_topic: "/goal_point"
+    odom_topic: "/odom/filtered"
+    path_topic: "/path"
+    obstacle_threshold: 40   # cells at/above this cost are impassable (~1.2m from an obstacle)
+    cost_weight: 3.0         # extra step cost per unit of inflated cost; keeps paths in open space
+    snap_radius: 2.0         # metres to search for a free cell if start/goal is blocked
+    goal_tolerance: 0.5      # metres; goal counts as reached inside this
+    replan_timeout: 5.0      # seconds without a plan before forcing a replan
+    timer_period: 0.5        # seconds between goal-reached checks

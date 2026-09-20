@@ -3,6 +3,11 @@ ARG BASE_IMAGE=ghcr.io/watonomous/robot_base/base:humble-ubuntu22.04
 ################################ Source ################################
 FROM ${BASE_IMAGE} AS source
 
+# The ROS apt signing key baked into the base image has expired; refresh it
+# so apt-get update can pull a current package index.
+RUN curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key \
+    -o /usr/share/keyrings/ros2-latest-archive-keyring.gpg
+
 WORKDIR ${AMENT_WS}/src
 
 # Copy in source code 
@@ -22,6 +27,11 @@ RUN apt-get -qq update && rosdep update && \
 
 ################################# Dependencies ################################
 FROM ${BASE_IMAGE} AS dependencies
+
+# The ROS apt signing key baked into the base image has expired; refresh it
+# so apt-get update can pull a current package index.
+RUN curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key \
+    -o /usr/share/keyrings/ros2-latest-archive-keyring.gpg
 
 # ADD MORE DEPENDENCIES HERE
 

@@ -1,3 +1,13 @@
-# map_memory_node:
-#   ros__parameters:
-    
+map_memory_node:
+  ros__parameters:
+    costmap_topic: "/costmap"
+    odom_topic: "/odom/filtered"
+    map_topic: "/map"
+    frame_id: "sim_world"
+    resolution: 0.1          # metres per cell (same as the costmap)
+    width: 400               # 40m x 40m; the arena walls are at +/-15m
+    height: 400
+    origin_x: -20.0
+    origin_y: -20.0
+    update_distance: 1.5     # metres the robot must move before fusing again
+    update_period: 1.0       # seconds between fusion checks

@@ -10,3 +10,46 @@ These steps are to setup the monorepo to work on your own PC. We utilize docker 
 3. You're all set! You can begin the assignment by visiting the WATonomous Wiki.
 
 Link to Onboarding Assignment: https://wiki.watonomous.ca/
+
+---
+
+## Solution
+
+Four ROS 2 (Humble, C++17) nodes under `src/robot/` turn lidar scans into
+point-to-point navigation. Each package keeps the ROS plumbing in `*_node.cpp`
+and the algorithm in `*_core.cpp` so the core can be unit-tested without ROS.
+
+```
+/lidar ──► costmap ──► /costmap ──► map_memory ──► /map ──► planner ──► /path ──► control ──► /cmd_vel
+                                        ▲                     ▲                    ▲
+                                  /odom/filtered        /odom/filtered       /odom/filtered
+                                                        /goal_point
+```
+
+| Node | In | Out | What it does |
+|---|---|---|---|
+| `costmap` | `/lidar` (LaserScan) | `/costmap` (OccupancyGrid, lidar frame) | 40×40 m grid at 0.1 m centred on the robot. Bresenham ray-traces free space (0), marks hits (100), leaves untouched cells unknown (−1), then inflates obstacles with `100·(1 − d/r)` out to 2 m. |
+| `map_memory` | `/costmap`, `/odom/filtered` | `/map` (OccupancyGrid, `sim_world`, latched) | Fixed 40×40 m global grid. Every 1.5 m of travel it fuses the latest costmap by walking each global cell and sampling the rotated costmap (no gaps), merging with `max()` since the world is static. Costmaps are paired with the odom sample nearest their timestamp so turning doesn't smear walls. |
+| `planner` | `/map`, `/goal_point`, `/odom/filtered` | `/path` (Path) | 8-connected A* with a cost penalty for inflated cells (paths prefer open space) and no corner cutting. Start/goal inside an obstacle are snapped to the nearest free cell. Replans on every map update and every 5 s; clears the path when within 0.5 m of the goal. |
+| `control` | `/path`, `/odom/filtered` | `/cmd_vel` (Twist, 10 Hz) | Pure pursuit with a 1.5 m lookahead at 0.5 m/s. Spins in place when the lookahead point is more than ~70° off heading, slows into the goal, stops within 0.2 m. |
+
+All tunables live in each package's `config/params.yaml`.
+
+### Running it
+
+```bash
+# once: point watod at the modules you want (already in watod-config.local.sh)
+#   ACTIVE_MODULES="vis_tools gazebo robot"
+./watod build
+./watod up
+```
+
+Open Foxglove, connect to `ws://localhost:<FOXGLOVE_BRIDGE_PORT>` (printed by
+`./watod up`; also in `modules/.env`), import
+`config/wato_asd_training_foxglove_config .json`, and click a point in the 3D
+panel (publish → point on `/goal_point`). The robot plans and drives there.
+
+After editing a node: `./watod build robot && ./watod up robot`.
+
+> The base Docker image ships an expired ROS apt signing key; the Dockerfiles
+> refresh it from rosdistro before installing anything.

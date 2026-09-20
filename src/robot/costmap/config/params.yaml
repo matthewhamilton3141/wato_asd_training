@@ -1,3 +1,9 @@
-# costmap_node:
-#   ros__parameters:
-
+costmap_node:
+  ros__parameters:
+    scan_topic: "/lidar"
+    costmap_topic: "/costmap"
+    resolution: 0.1          # metres per cell
+    width: 400               # cells -> 40m, covers the full lidar range
+    height: 400
+    inflation_radius: 2.0    # metres; robot chassis is 2.0 x 1.0 m
+    min_range: 0.3           # drop returns closer than this (self hits)

@@ -1,3 +1,11 @@
-# control_node:
-#   ros__parameters:
-    
+control_node:
+  ros__parameters:
+    path_topic: "/path"
+    odom_topic: "/odom/filtered"
+    cmd_vel_topic: "/cmd_vel"
+    lookahead_distance: 1.5    # metres; larger = smoother, smaller = tighter tracking
+    goal_tolerance: 0.2        # metres; stop when this close to the end of the path
+    linear_speed: 0.5          # m/s cruising speed
+    max_angular_speed: 1.0     # rad/s
+    turn_in_place_angle: 1.2   # rad; heading error beyond this spins in place first
+    control_period: 0.1        # seconds (10 Hz)
