@@ -40,10 +40,14 @@ void ControlNode::odomCallback(const nav_msgs::msg::Odometry::SharedPtr msg) {
 }
 
 void ControlNode::timerCallback() {
-  // Always publish so a cleared path stops the robot rather than leaving the
-  // last command running.
+  // Stay silent until odometry arrives: that proves the sim and its ROS<->GZ
+  // bridge are up, and the bridge can crash if it sees a /cmd_vel during boot.
+  if (!odom_) return;
+
+  // From then on always publish, so a cleared path stops the robot rather
+  // than leaving the last command running.
   geometry_msgs::msg::Twist cmd;
-  if (odom_ && control_.hasPath()) {
+  if (control_.hasPath()) {
     cmd = control_.computeVelocity(*odom_);
   }
   cmd_pub_->publish(cmd);
